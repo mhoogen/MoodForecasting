@@ -2,7 +2,7 @@ import csv
 from dateutil import parser
 import time
 import numpy
-# from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error
 from math import sqrt
 import model.model
 import os
