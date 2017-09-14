@@ -117,16 +117,16 @@ class Util():
         return current_index
 
     def mse(self, predicted, desired):
-        rmse = []
+        mse = []
         for i in range(len(predicted[0])):
             pred = []
             des = []
             for j in range(len(predicted)):
                 pred.append(predicted[j][i])
                 des.append(desired[j][i])
-            rmse.append(sqrt(mean_squared_error(pred, des)))
+            mse.append(np.mean((np.array(pred)-np.array(des))**2))
 
-        return rmse
+        return mse
 
     def write_results_to_file(self, directory, fitness_gp, fitness_ga, best_model, generation):
         f_model = open(directory+'models', 'a')

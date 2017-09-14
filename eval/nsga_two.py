@@ -1,7 +1,8 @@
 from inspyred.ec import emo
 import random
-from sklearn.metrics import mean_squared_error
+#from sklearn.metrics import mean_squared_error
 import math
+import numpy as np
 
 class PatientProblem():
 
@@ -63,7 +64,7 @@ class PatientProblem():
 
             evals = []
             for eval in self.eval_aspects:
-                mse = mean_squared_error(predictions[eval], real[eval])
+                mse = np.mean((np.array(predictions[eval])-np.array(real[eval]))**2)
                 evals.append(mse)
             fitness.append(emo.Pareto(evals))
         return fitness
