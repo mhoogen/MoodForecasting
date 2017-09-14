@@ -34,14 +34,14 @@ print 'imputing nan and normalizing set...'
 result_nan = ag.impute_nan(result)
 result_norm = ag.normalize_data(result_nan)
 result_selected = ag.filter_datalack_cases(result_norm, min_days_per_patient)
-result_limited = ag.select_max_patients(result_selected, number_patients)
+#result_limited = ag.select_max_patients(result_selected, number_patients)
 print 'done.'
 print 'constructing training and test set...',
 training_frac = 0.6
 test_frac = 0.2
 validation_frac = 1 - training_frac - test_frac
 
-[training, test, validation, states] = ag.identify_gp_dataset(result_limited, training_frac, test_frac, validation_frac, [])
+[training, test, validation, states] = ag.identify_gp_dataset(result_selected, training_frac, test_frac, validation_frac, [])
 #input_attributes, input_training, input_test, output_attributes, output_training, output_test = ag.identify_regression_dataset(result_norm, 'AS14.01', 0.5, ['mood'], ['circumplex.arousal', 'circumplex.valence'])
 print ' done.'
 

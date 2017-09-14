@@ -132,7 +132,7 @@ class Util():
         f_model = open(directory+'models', 'a')
         best_model.print_model_to_file(f_model, generation)
         f_ga = open(directory+'ga.csv', 'a')
-        f_ga.write(str(generation) + ', ' + str(max(fitness_ga)) + ', ' + str(numpy.mean(fitness_ga)) + ', ' + '\n')
+        f_ga.write(str(generation) + ', ' + str(max(fitness_ga)) + ', ' + str(numpy.mean(fitness_ga)) + ', ' + str(numpy.std(fitness_ga)) + ', ' + '\n')
 
 
     def write_results_to_file(self, directory, fitness_gp, best_model, generation):
