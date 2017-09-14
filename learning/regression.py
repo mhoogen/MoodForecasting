@@ -34,4 +34,8 @@ class Regression():
         self.model.fit(inputs, outputs)
 
     def test_regression(self, test_inputs, test_outputs):
-        return self.model.predict(test_inputs).tolist()
+        outputs = self.model.predict(test_inputs).tolist()
+        new_outputs = []
+        for o in outputs:
+            new_outputs.append([o])
+        return new_outputs
