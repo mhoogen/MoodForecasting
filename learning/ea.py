@@ -207,6 +207,8 @@ class EA():
         self.eval_aspects = eval_aspects
         self.output_directory = self.util.create_output_directory()
         self.parallel = parallel
+        print '-----'
+        print mp.cpu_count()
         self.processors = (mp.cpu_count()-1)
 
         # Create the initial population of models in the GP
