@@ -12,6 +12,8 @@ import time, socket
 
 def compute(n):
     print n
+    host = socket.gethostname()
+    return (host, n)
 
 class EA():
 
