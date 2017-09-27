@@ -105,7 +105,7 @@ class EA():
 #
 #        return fitness_values_gp
 
-    def compute(args):
+    def compute(self, args):
         result = self.evaluate_individual_gp(args[0], args[1], args[2], args[3], args[4])
         host = socket.gethostname()
         return (host, result)
