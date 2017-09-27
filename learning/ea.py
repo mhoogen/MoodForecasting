@@ -10,6 +10,9 @@ import datetime
 import dispy
 import time, socket
 
+def compute(n):
+    print n
+
 class EA():
 
     training_data = []
@@ -105,14 +108,14 @@ class EA():
 #
 #        return fitness_values_gp
 
-    def compute(self, args):
-        result = self.evaluate_individual_gp(args[0], args[1], args[2], args[3], args[4])
-        host = socket.gethostname()
-        return (host, result)
+#    def compute(self, args):
+#        result = self.evaluate_individual_gp(args[0], args[1], args[2], args[3], args[4])
+#        host = socket.gethostname()
+#        return (host, result)
 
     def evaluate_population_gp(self, population_gp, cache=True, pop_size=5, generations=5):
         if self.parallel:
-            cluster = dispy.JobCluster(self.compute)
+            cluster = dispy.JobCluster(compute)
             jobs = []
 
         self.output = mp.Queue()
