@@ -112,7 +112,7 @@ class EA():
 
     def evaluate_population_gp(self, population_gp, cache=True, pop_size=5, generations=5):
         if self.parallel:
-            cluster = dispy.JobCluster(compute)
+            cluster = dispy.JobCluster(self.compute)
             jobs = []
 
         self.output = mp.Queue()
