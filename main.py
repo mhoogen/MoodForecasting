@@ -17,7 +17,7 @@ from dateutil import parser
 
 granularity = 60*24
 min_days_per_patient = 40
-number_patients = 10
+number_patients = 2
 max_missing_values = 2
 u = Util()
 print 'reading the file....',
@@ -47,7 +47,7 @@ print ' done.'
 
 population_size_gp = 10
 #population_size_ga = 1
-generations = 10
+generations = 1
 max_depth = 6
 max_params = 7
 eval_aspects = ['self.mood', 'self.sleep']

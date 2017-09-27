@@ -7,6 +7,8 @@ from util.util import Util
 import pandas as pd
 import numpy as np
 import datetime
+import dispy
+import time, socket
 
 class EA():
 
@@ -61,7 +63,58 @@ class EA():
         self.output.put(fitness_record)
         return fitness_record
 
+#    def evaluate_population_gp(self, population_gp, cache=True, pop_size=5, generations=5):
+#        self.output = mp.Queue()
+#        fitness_values_gp = [0] * len(population_gp)
+#        processes = []
+#        results = []
+#
+#        for i in range(0, len(population_gp)):
+#            m = population_gp[i]
+#            if self.parallel:
+#                processes.append(mp.Process(target=self.evaluate_individual_gp, args=(m, i, cache, pop_size, generations)))
+#            else:
+#                temp = self.evaluate_individual_gp(m, i, cache, pop_size, generations)
+#                results.append(temp)
+#
+#        if self.parallel:
+#            # start the processes given the number of processors
+#            processes_completed = False
+#            start = 0
+#            while not processes_completed:
+#                for p in range(start, min(start+self.processors, len(processes))):
+#                    processes[p].start()
+#                for p in range(start, min(start+self.processors, len(processes))):
+#                    processes[p].join()
+#                start += self.processors
+#                if start >= len(processes):
+#                    processes_completed = True
+#
+#            results = [self.output.get() for p in processes]
+#
+#        for result in results:
+#            gp_index = result[0]
+#            f = result[1]
+#            # print 'gp_index is now: ', gp_index
+#            # print 'f is now: ', f
+#            if not (population_gp[gp_index].to_string() in self.cache_fitness.keys()):
+#                self.cache_fitness[population_gp[gp_index].to_string()] = f
+#                fitness_values_gp[gp_index] = f
+#            else:
+#                fitness_values_gp[gp_index] = self.cache_fitness[population_gp[gp_index].to_string()]
+#
+#        return fitness_values_gp
+
+    def compute(args):
+        result = self.evaluate_individual_gp(args[0], args[1], args[2], args[3], args[4])
+        host = socket.gethostname()
+        return (host, result)
+
     def evaluate_population_gp(self, population_gp, cache=True, pop_size=5, generations=5):
+        if self.parallel:
+            cluster = dispy.JobCluster(compute)
+            jobs = []
+
         self.output = mp.Queue()
         fitness_values_gp = [0] * len(population_gp)
         processes = []
@@ -70,25 +123,21 @@ class EA():
         for i in range(0, len(population_gp)):
             m = population_gp[i]
             if self.parallel:
-                processes.append(mp.Process(target=self.evaluate_individual_gp, args=(m, i, cache, pop_size, generations)))
+                job = cluster.submit([m, i, cache, pop_size, generations])
+                job.id = i
+                jobs.append(job)
             else:
                 temp = self.evaluate_individual_gp(m, i, cache, pop_size, generations)
                 results.append(temp)
 
         if self.parallel:
+            cluster.wait()
             # start the processes given the number of processors
-            processes_completed = False
-            start = 0
-            while not processes_completed:
-                for p in range(start, min(start+self.processors, len(processes))):
-                    processes[p].start()
-                for p in range(start, min(start+self.processors, len(processes))):
-                    processes[p].join()
-                start += self.processors
-                if start >= len(processes):
-                    processes_completed = True
-
-            results = [self.output.get() for p in processes]
+            for job in jobs:
+                host, result = job()
+                print result
+                results.append(result)
+            cluster.print_status()
 
         for result in results:
             gp_index = result[0]
@@ -102,6 +151,7 @@ class EA():
                 fitness_values_gp[gp_index] = self.cache_fitness[population_gp[gp_index].to_string()]
 
         return fitness_values_gp
+
 
 
     def evaluate_populations_coev(self, population_gp, population_ga):
