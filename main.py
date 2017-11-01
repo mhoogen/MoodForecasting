@@ -9,7 +9,7 @@ from learning.regression import Regression
 from learning.benchmark import Benchmark
 from model.model import Model
 from eval.formal_method import EvaluationFramework
-from learning.ea import EA
+import learning.ea as ea
 import datetime
 
 
@@ -52,7 +52,6 @@ max_depth = 6
 max_params = 7
 eval_aspects = ['self.mood', 'self.sleep']
 
-ea = EA()
 print 'Testing the parameters for the evaluation framework....'
 ##ea.run_coev(states, population_size_gp, population_size_ga, generations, max_depth, training, test, max_params, ['self.mood'], 0.1, 0.5, True, 4)
 # ea.evaluate_params_nsga_2(states, population_size_gp, generations, max_depth, training, test, max_params, eval_aspects, True, 3)
