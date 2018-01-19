@@ -148,7 +148,7 @@ def evaluate_population_gp(population_gp, cache=True, pop_size=5, generations=5)
 
     if parallel:
         cluster.wait()
-        # print 'waiting...'
+        print 'waiting...'
         # start the processes given the number of processors
         for job in jobs:
             result = job()
