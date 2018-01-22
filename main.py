@@ -9,7 +9,7 @@ from learning.regression import Regression
 from learning.benchmark import Benchmark
 from model.model import Model
 from eval.formal_method import EvaluationFramework
-import learning.ea as ea
+from learning.ea import EA
 import datetime
 
 
@@ -17,7 +17,7 @@ from dateutil import parser
 
 granularity = 60*24
 min_days_per_patient = 40
-number_patients = 2
+number_patients = 30
 max_missing_values = 2
 u = Util()
 print 'reading the file....',
@@ -35,6 +35,8 @@ result_nan = ag.impute_nan(result)
 result_norm = ag.normalize_data(result_nan)
 result_selected = ag.filter_datalack_cases(result_norm, min_days_per_patient)
 result_limited = ag.select_max_patients(result_selected, number_patients)
+#result_limited = result_selected
+
 print 'done.'
 print 'constructing training and test set...',
 training_frac = 0.6
@@ -45,14 +47,16 @@ validation_frac = 1 - training_frac - test_frac
 #input_attributes, input_training, input_test, output_attributes, output_training, output_test = ag.identify_regression_dataset(result_norm, 'AS14.01', 0.5, ['mood'], ['circumplex.arousal', 'circumplex.valence'])
 print ' done.'
 
-population_size_gp = 10
+population_size_gp = 100
 #population_size_ga = 1
-generations = 1
+generations = 50
 max_depth = 6
 max_params = 7
 eval_aspects = ['self.mood', 'self.sleep']
 
 print 'Testing the parameters for the evaluation framework....'
+
+ea = EA()
 ##ea.run_coev(states, population_size_gp, population_size_ga, generations, max_depth, training, test, max_params, ['self.mood'], 0.1, 0.5, True, 4)
 # ea.evaluate_params_nsga_2(states, population_size_gp, generations, max_depth, training, test, max_params, eval_aspects, True, 3)
 

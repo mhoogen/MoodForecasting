@@ -49,6 +49,27 @@ class Aggregate():
                     input_test[i].append(0)
         return input_attributes, input_training, input_test, output_attributes, output_training, output_test
 
+    def identify_lstm_dataset(self, dataset, id, targets, number_pred_time_points):
+
+        training_points = len(dataset[id][targets[0]]) - number_pred_time_points
+
+        x = np.zeros((training_points, len(dataset[id].values())))
+        y = np.zeros((training_points, len(targets) * number_pred_time_points))
+
+        for t in range(0, training_points):
+
+            i = 0
+            for attr in dataset[id]:
+                x[t,i] = dataset[id][attr][t]
+                i = i + 1
+
+            j = 0
+            for target in targets:
+                for k in range(0, number_pred_time_points):
+                    y[t,(j*number_pred_time_points)+k] = dataset[id][target][t+k+1]
+                j = j + 1
+        return x, y
+
     def identify_rnn_dataset(self, initial_dataset, id, training_frac, test_frac, validation_frac, target, remove):
 
         # Training set smaller than the test set not allowed.

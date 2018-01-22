@@ -105,6 +105,33 @@ class Plot():
                 plt.savefig(directory + fig_name + '_' + eval.replace('self.', ''), bbox_inches='tight')
                 plt.close(fig_name + '_' + eval)
 
+    def visualize_performance(self, y_train_real, y_train_pred, y_test_real, y_test_pred, fig_name, directory):
+            print y_train_real.shape
+            print y_train_pred.shape
+            print y_test_real.shape
+            print y_test_pred.shape
+
+            time_training = list(range(0, len(y_train_real)))
+            time_test = list(range(len(y_train_real), len(y_train_real)+len(y_test_real)))
+
+            plt.figure(fig_name)
+            plt.hold(True)
+            plt.plot(time_training, y_train_real, 'r--')
+            plt.plot(time_training, y_train_pred, 'c*')
+
+            plt.plot(time_test, y_test_real, 'y-')
+            plt.plot(time_test, y_test_pred, 'c*')
+            plt.hold(False)
+            # plt.show()
+
+            # self.legends[eval_aspects[eval]]['data'].append((training_plot, test_plot, validation_plot))
+            # self.legends[eval_aspects[eval]]['text'].append('echo state network')
+
+            print fig_name
+            plt.savefig(directory + fig_name +'.png', bbox_inches='tight')
+            plt.close(fig_name)
+
+
     def visualize_performance_gp(self, model, training_data, test_data, validation_data, eval_aspects, individual, fig_name, save=False, directory=''):
 
 

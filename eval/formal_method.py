@@ -8,7 +8,7 @@ from scipy.stats import pearsonr
 class EvaluationFramework():
 
     rmax = 3
-    pop_size = 10
+    pop_size = 5
     generations = 5
     w1 = 1
     w2 = 0

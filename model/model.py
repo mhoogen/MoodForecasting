@@ -81,7 +81,6 @@ class Model():
                 # print self.state_names[v]
                 # print self.predicted_values[self.t][v]
 
-
     def get_values(self, state):
         if self.t == 0:
             print 'number of values ' + str(self.t)
