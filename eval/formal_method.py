@@ -35,12 +35,12 @@ class EvaluationFramework():
         self.headers = []
         self.nd_hypervolumes = []
 
-    def get_best_model_parameters(self, m, training, test, eval_aspects, individual):
+    def get_best_model_parameters(self, m, training, test, eval_aspects, individual, ra=[-1,1]):
         self.training_data = training
         self.test_data = test
         self.model = m
         self.eval_aspects = eval_aspects
-        self.generate_nsga_2_data()
+        self.generate_nsga_2_data(ra=ra)
         individual_results = self.data[self.data[:,0] == individual]
         i_pred = [i for i, s in enumerate(self.headers) if 'pred_' in s]
         i_param = [i for i, s in enumerate(self.headers) if 'param' in s]
@@ -226,7 +226,7 @@ class EvaluationFramework():
         self.nd_hypervolumes.append(volume)
 
 
-    def generate_nsga_2_data(self):
+    def generate_nsga_2_data(self, ra=[-1,1]):
         # First create a suitable matrix and headers
 
         self.headers = ["ID", "run"]
@@ -244,7 +244,7 @@ class EvaluationFramework():
             for r in range(self.rmax):
                 prng = random.Random()
                 problem = PatientProblem()
-                problem.set_values(self.model, self.training_data[ID], self.test_data[ID], self.eval_aspects)
+                problem.set_values(self.model, self.training_data[ID], self.test_data[ID], self.eval_aspects, ra=ra)
                 ea = inspyred.ec.emo.NSGA2(prng)
                 ea.variator = [inspyred.ec.variators.blend_crossover,
                                inspyred.ec.variators.gaussian_mutation]

@@ -10,23 +10,26 @@ class PatientProblem():
     test_data = {}
     model = []
     eval_aspects = []
+    ra = []
 
     def __init__(self):
         self.training_data = {}
         self.test_data = {}
         self.model = []
         self.eval_aspects = []
+        self.ra = []
 
 
-    def set_values(self, m, training, test, eval_aspects):
+    def set_values(self, m, training, test, eval_aspects, ra=[-1,1]):
         self.training_data = training
         self.test_data = test
         self.model = m
         self.eval_aspects = eval_aspects
+        self.ra = ra
 
     def generator(self, random, args):
         numb_parameters = len(self.model.parameter_names)
-        return [random.uniform(-1.0, 1.0) for _ in range(numb_parameters)]
+        return [random.uniform(self.ra[0], self.ra[1]) for _ in range(numb_parameters)]
 
     def evaluator_internal(self, candidates, training=True):
         number_of_steps = 3
@@ -52,7 +55,10 @@ class PatientProblem():
                 self.model.reset()
                 state_values = []
                 for i in range(len(self.model.state_names)):
-                    state_values.append(data[self.model.state_names[i]][step])
+                    if self.model.state_names[i] in data.keys():
+                        state_values.append(data[self.model.state_names[i]][step])
+                    else:
+                        state_values.append(0.5)
                 self.model.set_state_values(state_values)
                 self.model.set_parameter_values(c)
                 self.model.execute_steps(number_of_steps)

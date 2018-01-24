@@ -70,16 +70,19 @@ class Model():
             self.predicted_values.append([0]*len(self.state_names))
             self.t += 1
             for v in range(len(self.state_names)):
-                value = eval(self.state_equations[v])
+                try:
+                    value = eval(self.state_equations[v])
+                except:
+                    value = self.max_value
                 if math.isinf(value) or math.isnan(value):
                     value = self.max_value
                 exec("%s = %f" % (self.state_names[v], value))
                 self.state_values[self.t][v] = eval(self.state_names[v])
                 self.predicted_values[self.t][v] = self.state_values[self.t][v]
-                # print '-----'
-                # print self.t
-                # print self.state_names[v]
-                # print self.predicted_values[self.t][v]
+#                print '-----'
+#                print self.t
+#                print self.state_names[v],
+#                print self.predicted_values[self.t][v]
 
     def get_values(self, state):
         if self.t == 0:

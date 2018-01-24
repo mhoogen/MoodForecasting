@@ -106,28 +106,33 @@ class Plot():
                 plt.close(fig_name + '_' + eval)
 
     def visualize_performance(self, y_train_real, y_train_pred, y_test_real, y_test_pred, fig_name, directory):
-            print y_train_real.shape
-            print y_train_pred.shape
-            print y_test_real.shape
-            print y_test_pred.shape
-
             time_training = list(range(0, len(y_train_real)))
             time_test = list(range(len(y_train_real), len(y_train_real)+len(y_test_real)))
 
             plt.figure(fig_name)
             plt.hold(True)
             plt.plot(time_training, y_train_real, 'r--')
-            plt.plot(time_training, y_train_pred, 'c*')
+            plt.plot(time_test, y_test_real, 'b-')
+            plt.plot(time_training, y_train_pred, 'ko', markersize=2)
+            plt.plot(time_test, y_test_pred, 'ko', markersize=2)
 
-            plt.plot(time_test, y_test_real, 'y-')
-            plt.plot(time_test, y_test_pred, 'c*')
+            plt.ylabel('Value')
+            plt.xlabel('Time')
+            #ax = ref_fig.add_subplot(111)
+            #bbox_props = dict(boxstyle="doublearrow,pad=0.3", fc="cyan", ec="b", lw=2)
+            plt.annotate('', xy=(time_training[0],1.1), xycoords='data', xytext=(time_training[-1], 1.1), textcoords='data', arrowprops={'arrowstyle': '<->'})
+            plt.annotate('training set', xy=((float(sum(time_training))/len(time_training)), 1.05), color='red', xycoords='data', ha='center')
+            plt.annotate('', xy=(time_test[0],1.1), xycoords='data', xytext=(time_test[-1], 1.1), textcoords='data', arrowprops={'arrowstyle': '<->'})
+            plt.annotate('test set', xy=((float(sum(time_test))/len(time_test)), 1.05), color='blue', xycoords='data', ha='center')
+            plt.ylim(0,1.2)
+            plt.legend(['training data', 'test data', 'predicted values'], loc=4, fontsize=7)
+
             plt.hold(False)
             # plt.show()
 
             # self.legends[eval_aspects[eval]]['data'].append((training_plot, test_plot, validation_plot))
             # self.legends[eval_aspects[eval]]['text'].append('echo state network')
 
-            print fig_name
             plt.savefig(directory + fig_name +'.png', bbox_inches='tight')
             plt.close(fig_name)
 

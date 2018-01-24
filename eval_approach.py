@@ -42,7 +42,7 @@ def generate_lstm_prediction(training_data, validation_data, individual, eval_as
     model.compile(loss='mean_squared_error',
                   optimizer='rmsprop',
                   metrics=[metrics.mse])
-    model.fit(x_train.reshape(x_train.shape[0], 1, x_train.shape[1]), y_train, batch_size=b_size, epochs=5)
+    model.fit(x_train.reshape(x_train.shape[0], 1, x_train.shape[1]), y_train, batch_size=b_size, epochs=20)
     predictions_train = model.predict(x_train.reshape(x_train.shape[0], 1, x_train.shape[1]), batch_size=b_size)
     predictions = model.predict(x_test.reshape(x_test.shape[0], 1, x_test.shape[1]), batch_size=b_size)
 
@@ -60,7 +60,6 @@ def generate_lstm_prediction(training_data, validation_data, individual, eval_as
                                      'lstm_'+individual+'_'+eval+'(t+'+str((j+1))+')', output_directory)
         rmse.append(current_rmse)
         i = i + 1
-    print rmse
     return rmse
 
 def predict_using_model(model, best_params, data, individual, eval_aspects):
@@ -70,7 +69,12 @@ def predict_using_model(model, best_params, data, individual, eval_aspects):
         initial_state_values = []
 
         for i in range(len(model.state_names)):
-            initial_state_values.append(data[individual][model.state_names[i]][step])
+            # If we have data for the state, set it to that value
+            if model.state_names[i] in data[individual]:
+                initial_state_values.append(data[individual][model.state_names[i]][step])
+            # Otherwise set it to the mean value
+            else:
+                initial_state_values.append(0.5)
 
         model.reset()
         model.set_state_values(initial_state_values)
@@ -83,9 +87,9 @@ def predict_using_model(model, best_params, data, individual, eval_aspects):
     return pred_values, real_values
 
 
-def generate_model_prediction(model, training_data, training_full, test_data, validation_data, individual, eval_aspects):
+def generate_model_prediction(model, training_data, training_full, test_data, validation_data, individual, eval_aspects, r=[-1,1], alg='gp'):
     ef = EvaluationFramework()
-    best_params = ef.get_best_model_parameters(model, training_data, test_data, eval_aspects, individual)
+    best_params = ef.get_best_model_parameters(model, training_data, test_data, eval_aspects, individual, ra=r)
 
     y_train_pred, y_train_real = predict_using_model(model, best_params, training_full, individual, eval_aspects)
     y_test_pred, y_test_real = predict_using_model(model, best_params, validation_data, individual, eval_aspects)
@@ -101,10 +105,9 @@ def generate_model_prediction(model, training_data, training_full, test_data, va
                                      y_train_pred[:,i*prediction_time+j],
                                      y_test_real[:,i*prediction_time+j],
                                      y_test_pred[:,i*prediction_time+j],
-                                     'gp_'+individual+'_'+eval+'(t+'+str((j+1))+')', output_directory)
+                                     alg+'_'+individual+'_'+eval+'(t+'+str((j+1))+')', output_directory)
         rmse.append(current_rmse)
         i = i + 1
-    print rmse
     return rmse
 
 
@@ -160,7 +163,7 @@ print 'done.'
 # Define the three models:
 
 cols = []
-algs = ['gp', 'lstm']
+algs = ['lit', 'gp', 'lstm']
 
 for alg in algs:
     for eval in eval_aspects:
@@ -170,13 +173,34 @@ for alg in algs:
 
 results_in_sample = pd.DataFrame(0, index=training_is_gp.keys(), columns=cols)
 
+print 'in sample'
+print 'sample is ', training_is_gp.keys()
+
 i = 0
 for individual in training_is_gp.keys():
-#for individual in ['0102055']:
 
+    print 'Individual ', individual
     # 1: Literature model
 
-
+    print 'Literature model...'
+    lit_model = Model()
+    lit_model.set_model(['self.mood', 'self.social', 'self.sleep', 'self.pleasantactivitylevel',
+                        'self.enjoyed',
+                        'self.socialintegration'],
+                        ['self.mood + self.param3v * ((((1/(1+math.exp(-self.param1v*(self.param4v * self.social + self.param5v * self.pleasantactivitylevel + self.param6v * self.enjoyed))-self.param2v))-(1/(1+math.exp(self.param1v*self.param2v))))*(1+math.exp(-self.param1v*self.param2v)))-self.mood)',
+                         'self.social + self.param9v * ((((1/(1+math.exp(-self.param7v*(self.param10v + self.param11v * self.pleasantactivitylevel + self.param12v * self.mood))-self.param8v))-(1/(1+math.exp(self.param7v*self.param8v))))*(1+math.exp(-self.param7v*self.param8v)))-self.social)',
+                         'self.sleep',
+                         'self.pleasantactivitylevel + self.param15v * ((((1/(1+math.exp(-self.param13v*(self.param16v*self.socialintegration))-self.param14v))-(1/(1+math.exp(self.param13v*self.param14v))))*(1+math.exp(-self.param13v*self.param14v)))-self.pleasantactivitylevel)',
+                         'self.enjoyed + self.param19v * ((((1/(1+math.exp(-self.param17v*(self.param20v*self.pleasantactivitylevel + self.param21v*self.mood))-self.param18v))-(1/(1+math.exp(self.param17v*self.param18v))))*(1+math.exp(-self.param17v*self.param18v)))-self.enjoyed)',
+                         'self.socialintegration + self.param24v * ((((1/(1+math.exp(-self.param22v*(self.param10v + self.param25v*self.social))-self.param23v))-(1/(1+math.exp(self.param22v*self.param23v))))*(1+math.exp(-self.param22v*self.param23v)))-self.enjoyed)'],
+                        ['self.param1v', 'self.param2v', 'self.param3v', 'self.param4v', 'self.param5v', 'self.param6v',
+                         'self.param7v', 'self.param8v', 'self.param9v', 'self.param10v', 'self.param11v', 'self.param12v', 'self.param13v',
+                         'self.param14v', 'self.param15v', 'self.param16v', 'self.param17v', 'self.param18v', 'self.param19v', 'self.param20v',
+                         'self.param21v', 'self.param22v', 'self.param23v', 'self.param24v', 'self.param25v'])
+    error_lit = generate_model_prediction(lit_model, training_is_gp, training_is_gp_full, test_is_gp, validation_is_gp, individual, eval_aspects, r=[0,1], alg='lit')
+    for j in range(0, len(eval_aspects)):
+        results_in_sample.ix[i, j*prediction_time:(j+1)*prediction_time] = error_lit[j]
+    print error_lit
 
     # 2: GP model
 
@@ -185,22 +209,94 @@ for individual in training_is_gp.keys():
     gp_model = Model()
     gp_model.set_model(['self.worrying', 'self.mood', 'self.social', 'self.sleep', 'self.pleasantactivitylevel',
                         'self.enjoyed', 'self.selfesteem'],
-                        ['((((self.enjoyed-self.selfesteem)*((self.enjoyed-self.selfesteem)*(self.social-self.worrying)))*(self.social-self.worrying))*(self.social-self.worrying))',
-                         'self.enjoyed', 'self.sleep', 'self.sleep','self.enjoyed',
-                         '((self.selfesteem*(self.param1v+self.pleasantactivitylevel))-self.param1v)','self.social'],
-                         ['self.param1v'])
+                        ['((self.enjoyed-self.social)*((self.enjoyed-self.selfesteem)*((self.enjoyed-self.social)*self.social)))',
+                         '(self.mood+(self.param3v*(self.sleep*(self.param3v-self.mood))))',
+                         '(((self.worrying-(self.param3v-self.social))*(self.worrying*self.sleep))+(((self.worrying-(self.param3v-self.social))*(self.sleep*self.sleep))+self.param3v))',
+                         'self.sleep',
+                         'self.social',
+                         'self.selfesteem',
+                         'self.mood'],
+                         ['self.param3v'])
     error_gp = generate_model_prediction(gp_model, training_is_gp, training_is_gp_full, test_is_gp, validation_is_gp, individual, eval_aspects)
     for j in range(0, len(eval_aspects)):
-        results_in_sample.ix[i, j*prediction_time:(j+1)*prediction_time] = error_gp[j]
-#    print error_gp
+        results_in_sample.ix[i, (len(eval_aspects)*prediction_time) +
+                             j*prediction_time:(len(eval_aspects)*prediction_time) + (j+1)*prediction_time] = error_gp[j]
+    print error_gp
 
     # 3: LSTM
 
     print 'LSTM....'
     error_lstm = generate_lstm_prediction(training_is_lstm, validation_is_lstm, individual, eval_aspects)
     for j in range(0, len(eval_aspects)):
-        results_in_sample.ix[i, (len(eval_aspects)*prediction_time) +
-                             j*prediction_time:(len(eval_aspects)*prediction_time) + (j+1)*prediction_time] = error_lstm[j]    print error_lstm
+        results_in_sample.ix[i, 2*(len(eval_aspects)*prediction_time) +
+                             j*prediction_time:2*(len(eval_aspects)*prediction_time) + (j+1)*prediction_time] = error_lstm[j]
+
+    print error_lstm
     i = i + 1
 
 results_in_sample.to_csv(output_directory + 'results_in_sample.csv')
+
+results_out_sample = pd.DataFrame(0, index=training_os_gp.keys(), columns=cols)
+
+print 'out of sample'
+print 'sample is ', training_os_gp.keys()
+
+i = 0
+for individual in training_os_gp.keys():
+
+    print 'Individual ', individual
+    # 1: Literature model
+
+    print 'Literature model...'
+    lit_model = Model()
+    lit_model.set_model(['self.mood', 'self.social', 'self.sleep', 'self.pleasantactivitylevel',
+                        'self.enjoyed',
+                        'self.socialintegration'],
+                        ['self.mood + self.param3v * ((((1/(1+math.exp(-self.param1v*(self.param4v * self.social + self.param5v * self.pleasantactivitylevel + self.param6v * self.enjoyed))-self.param2v))-(1/(1+math.exp(self.param1v*self.param2v))))*(1+math.exp(-self.param1v*self.param2v)))-self.mood)',
+                         'self.social + self.param9v * ((((1/(1+math.exp(-self.param7v*(self.param10v + self.param11v * self.pleasantactivitylevel + self.param12v * self.mood))-self.param8v))-(1/(1+math.exp(self.param7v*self.param8v))))*(1+math.exp(-self.param7v*self.param8v)))-self.social)',
+                         'self.sleep',
+                         'self.pleasantactivitylevel + self.param15v * ((((1/(1+math.exp(-self.param13v*(self.param16v*self.socialintegration))-self.param14v))-(1/(1+math.exp(self.param13v*self.param14v))))*(1+math.exp(-self.param13v*self.param14v)))-self.pleasantactivitylevel)',
+                         'self.enjoyed + self.param19v * ((((1/(1+math.exp(-self.param17v*(self.param20v*self.pleasantactivitylevel + self.param21v*self.mood))-self.param18v))-(1/(1+math.exp(self.param17v*self.param18v))))*(1+math.exp(-self.param17v*self.param18v)))-self.enjoyed)',
+                         'self.socialintegration + self.param24v * ((((1/(1+math.exp(-self.param22v*(self.param10v + self.param25v*self.social))-self.param23v))-(1/(1+math.exp(self.param22v*self.param23v))))*(1+math.exp(-self.param22v*self.param23v)))-self.enjoyed)'],
+                        ['self.param1v', 'self.param2v', 'self.param3v', 'self.param4v', 'self.param5v', 'self.param6v',
+                         'self.param7v', 'self.param8v', 'self.param9v', 'self.param10v', 'self.param11v', 'self.param12v', 'self.param13v',
+                         'self.param14v', 'self.param15v', 'self.param16v', 'self.param17v', 'self.param18v', 'self.param19v', 'self.param20v',
+                         'self.param21v', 'self.param22v', 'self.param23v', 'self.param24v', 'self.param25v'])
+    error_lit = generate_model_prediction(lit_model, training_os_gp, training_os_gp_full, test_os_gp, validation_os_gp, individual, eval_aspects, r=[0,1], alg='lit')
+    for j in range(0, len(eval_aspects)):
+        results_out_sample.ix[i, j*prediction_time:(j+1)*prediction_time] = error_lit[j]
+    print error_lit
+
+    # 2: GP model
+
+    print 'GP....'
+
+    gp_model = Model()
+    gp_model.set_model(['self.worrying', 'self.mood', 'self.social', 'self.sleep', 'self.pleasantactivitylevel',
+                        'self.enjoyed', 'self.selfesteem'],
+                        ['((self.enjoyed-self.social)*((self.enjoyed-self.selfesteem)*((self.enjoyed-self.social)*self.social)))',
+                         '(self.mood+(self.param3v*(self.sleep*(self.param3v-self.mood))))',
+                         '(((self.worrying-(self.param3v-self.social))*(self.worrying*self.sleep))+(((self.worrying-(self.param3v-self.social))*(self.sleep*self.sleep))+self.param3v))',
+                         'self.sleep',
+                         'self.social',
+                         'self.selfesteem',
+                         'self.mood'],
+                         ['self.param3v'])
+    error_gp = generate_model_prediction(gp_model, training_os_gp, training_os_gp_full, test_os_gp, validation_os_gp, individual, eval_aspects)
+    for j in range(0, len(eval_aspects)):
+        results_out_sample.ix[i, (len(eval_aspects)*prediction_time) +
+                             j*prediction_time:(len(eval_aspects)*prediction_time) + (j+1)*prediction_time] = error_gp[j]
+    print error_gp
+
+    # 3: LSTM
+
+    print 'LSTM....'
+    error_lstm = generate_lstm_prediction(training_os_lstm, validation_os_lstm, individual, eval_aspects)
+    for j in range(0, len(eval_aspects)):
+        results_out_sample.ix[i, 2*(len(eval_aspects)*prediction_time) +
+                             j*prediction_time:2*(len(eval_aspects)*prediction_time) + (j+1)*prediction_time] = error_lstm[j]
+
+    print error_lstm
+    i = i + 1
+
+results_out_sample.to_csv(output_directory + 'results_out_of_sample.csv')
