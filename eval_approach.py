@@ -129,12 +129,20 @@ print 'done.'
 print 'aggregating the data'
 print 'aggregating time...',
 result = ag.aggregate_dataset(dataset, granularity)
-result_selected = ag.select_longest_period(result, max_missing_values, 'self.mood')
+
+
 print 'done.'
 print 'imputing nan and normalizing set...'
 result_nan = ag.impute_nan(result)
 result_norm = ag.normalize_data(result_nan)
 result_selected = ag.filter_datalack_cases(result_norm, min_days_per_patient)
+
+time = []
+print result_selected
+for individual in result_selected.keys():
+    time.append(len(result_selected[individual]['self.mood']))
+print 'mean time ', np.array(time).mean(), ' standard deviation ', np.array(time).std()
+
 
 results_in_sample = dict((key,value) for key, value in result_selected.iteritems() if key in in_sample_patients)
 remaining_patients = dict((key,value) for key, value in result_selected.iteritems() if not (key in in_sample_patients))

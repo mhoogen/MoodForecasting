@@ -28,7 +28,6 @@ ag = Aggregate()
 print 'aggregating the data'
 print 'aggregating time...',
 result = ag.aggregate_dataset(dataset, granularity)
-result_selected = ag.select_longest_period(result, max_missing_values, 'self.mood')
 print 'done.'
 print 'imputing nan and normalizing set...'
 result_nan = ag.impute_nan(result)
